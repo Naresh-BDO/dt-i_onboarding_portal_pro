@@ -1,0 +1,149 @@
+<section class="new-joiner-list">
+  <div class="container">
+    <header class="list-header">
+      <h1 class="title">New Joiners Management</h1>
+      <p class="subtitle">Manage and track your new team members</p>
+    </header>
+
+    <!-- Alerts -->
+    <div class="alert alert--error" *ngIf="error">
+      {{ error }}
+      <button class="alert-close" (click)="error = ''">&times;</button>
+    </div>
+    <div class="alert alert--success" *ngIf="success">
+      {{ success }}
+      <button class="alert-close" (click)="success = ''">&times;</button>
+    </div>
+
+    <!-- Filters Section -->
+    <div class="filters-section">
+      <div class="filter-group">
+        <input
+          type="text"
+          class="input input--search"
+          placeholder="Search by name, email, or department..."
+          [(ngModel)]="searchTerm"
+          (input)="onSearchChange()"
+        />
+      </div>
+
+      <div class="filter-row">
+        <div class="filter-group">
+          <label class="label">Start Date From</label>
+          <input
+            type="date"
+            class="input"
+            [(ngModel)]="startDateFrom"
+            (change)="onFilterChange()"
+          />
+        </div>
+
+        <div class="filter-group">
+          <label class="label">Start Date To</label>
+          <input
+            type="date"
+            class="input"
+            [(ngModel)]="startDateTo"
+            (change)="onFilterChange()"
+          />
+        </div>
+
+        <div class="filter-group">
+          <label class="label">Sort By</label>
+          <select class="input" [(ngModel)]="sortBy" (change)="onSortChange()">
+            <option value="date">Start Date</option>
+            <option value="name">Name</option>
+            <option value="created">Created Date</option>
+          </select>
+        </div>
+
+        <div class="filter-group">
+          <label class="label">Order</label>
+          <select class="input" [(ngModel)]="sortOrder" (change)="onSortChange()">
+            <option value="desc">Descending</option>
+            <option value="asc">Ascending</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- Loading State -->
+    <div class="loading" *ngIf="isLoading">
+      <div class="spinner"></div>
+      <p>Loading new joiners...</p>
+    </div>
+
+    <!-- Empty State -->
+    <div class="empty-state" *ngIf="!isLoading && filteredJoiners.length === 0">
+      <div class="empty-icon">📋</div>
+      <h3>No new joiners found</h3>
+      <p>No new joiners match your search criteria.</p>
+    </div>
+
+    <!-- Table View -->
+    <div class="table-wrapper" *ngIf="!isLoading && filteredJoiners.length > 0">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Department</th>
+            <th>Manager</th>
+            <th>Start Date</th>
+            <th>Email Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let joiner of filteredJoiners" class="table-row">
+            <td class="cell-name">
+              <strong>{{ joiner.fullName }}</strong>
+            </td>
+            <td class="cell-email">
+              <a href="mailto:{{ joiner.email }}">{{ joiner.email }}</a>
+            </td>
+            <td class="cell-department">
+              {{ joiner.department || '—' }}
+            </td>
+            <td class="cell-manager">
+              {{ joiner.managerName || '—' }}
+            </td>
+            <td class="cell-date">
+              {{ formatDate(joiner.startDate) }}
+            </td>
+            <td class="cell-status">
+              <span [ngClass]="'badge ' + getEmailStatusClass(joiner)">
+                {{ getEmailStatus(joiner) }}
+              </span>
+            </td>
+            <td class="cell-actions">
+              <div class="action-buttons">
+                <button
+                  class="btn btn--small btn--secondary"
+                  *ngIf="canResendEmail() && joiner.welcomeEmailSentAtUtc"
+                  (click)="onResendEmail(joiner.id, joiner.fullName)"
+                  title="Resend welcome email"
+                >
+                  ✉️ Resend
+                </button>
+                <button
+                  class="btn btn--small btn--danger"
+                  *ngIf="canDelete()"
+                  (click)="onDelete(joiner.id, joiner.fullName)"
+                  title="Delete new joiner"
+                >
+                  🗑️ Delete
+                </button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Summary -->
+    <div class="summary" *ngIf="!isLoading && filteredJoiners.length > 0">
+      <p>Showing {{ filteredJoiners.length }} of {{ newJoiners.length }} new joiners</p>
+    </div>
+  </div>
+</section>

@@ -1,0 +1,50 @@
+<section class="home-page">
+  <div class="container">
+    <div class="welcome-section">
+      <div class="welcome-content">
+        <h1 class="welcome-title">Welcome to Onboarding Portal</h1>
+
+        <p class="welcome-subtitle">
+          Manage your new team members and streamline the onboarding process
+        </p>
+
+        <div class="welcome-actions">
+          <ng-container *ngIf="!auth.isAuthenticated(); else authenticatedBlock">
+            <div class="auth-prompts">
+              <a routerLink="/login" class="btn btn--primary">Login</a>
+              <a routerLink="/signup" class="btn btn--secondary">Create Account</a>
+            </div>
+          </ng-container>
+
+          <ng-template #authenticatedBlock>
+            <div class="authenticated-actions">
+              <p class="greeting">
+                Hello, <strong>{{ auth.getRoles().join(', ') }}</strong>!
+              </p>
+
+              <a *ngIf="auth.isAdmin()"
+                 routerLink="/dashboard"
+                 class="btn btn--primary">
+                Go to Dashboard
+              </a>
+
+              <a *ngIf="auth.isAdmin()"
+                 routerLink="/new-joiner-form"
+                 class="btn btn--secondary">
+                Add New Joiner
+              </a>
+
+              <a routerLink="/new-joiner-list" class="btn btn--secondary">
+                View New Joiners
+              </a>
+            </div>
+          </ng-template>
+        </div>
+      </div>
+
+      <div class="welcome-image">
+        <div class="illustration">👋</div>
+      </div>
+    </div>
+  </div>
+</section>

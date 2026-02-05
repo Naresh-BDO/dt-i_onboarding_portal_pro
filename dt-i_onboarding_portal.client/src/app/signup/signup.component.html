@@ -1,0 +1,114 @@
+<section class="signup-page">
+  <div class="card">
+    <header class="card__header">
+      <h1 class="title">Create Account</h1>
+      <p class="subtitle">Sign up for access to the portal</p>
+    </header>
+
+    <form class="form" (ngSubmit)="onSignup()" novalidate>
+      <div class="field">
+        <label for="username" class="label">Username</label>
+        <input
+          id="username"
+          [(ngModel)]="username"
+          name="username"
+          class="input"
+          placeholder="Enter a username"
+          required
+          autocomplete="username"
+        />
+      </div>
+
+      <div class="field">
+        <label for="email" class="label">Email</label>
+        <input
+          id="email"
+          type="email"
+          [(ngModel)]="email"
+          name="email"
+          class="input"
+          placeholder="Enter your email"
+          required
+          autocomplete="email"
+        />
+      </div>
+
+      <div class="field">
+        <label for="password" class="label">Password</label>
+        <input
+          id="password"
+          type="password"
+          [(ngModel)]="password"
+          name="password"
+          class="input"
+          placeholder="Enter a password (min 6 characters)"
+          required
+          autocomplete="new-password"
+        />
+      </div>
+
+      <div class="field">
+        <label for="confirmPassword" class="label">Confirm Password</label>
+        <input
+          id="confirmPassword"
+          type="password"
+          [(ngModel)]="confirmPassword"
+          name="confirmPassword"
+          class="input"
+          placeholder="Confirm your password"
+          required
+          autocomplete="new-password"
+        />
+      </div>
+
+      <div class="field">
+        <label for="role" class="label">Select Role</label>
+        <select
+          id="role"
+          [(ngModel)]="selectedRoleId"
+          name="selectedRoleId"
+          class="input"
+          required
+        >
+          <option value="0" disabled>-- Choose a role --</option>
+          <option *ngFor="let role of roles" [value]="role.id">
+            {{ role.name }}
+          </option>
+        </select>
+      </div>
+
+      <div class="actions">
+        <button
+          type="submit"
+          class="btn btn--primary"
+          [disabled]="
+            isSubmitting ||
+            !username ||
+            !email ||
+            !password ||
+            !confirmPassword ||
+            selectedRoleId === 0
+          "
+        >
+          <span *ngIf="!isSubmitting">Create Account</span>
+          <span *ngIf="isSubmitting" class="spinner" aria-hidden="true"></span>
+          <span class="sr-only" *ngIf="isSubmitting">Submitting…</span>
+        </button>
+      </div>
+
+      <div class="alert alert--error" *ngIf="error">
+        {{ error }}
+      </div>
+      <div class="alert alert--success" *ngIf="success">
+        {{ success }}
+      </div>
+    </form>
+
+    <footer class="card__footer">
+      <p class="muted">
+        Already have an account?
+        <a href="/login" class="link">Sign in here</a>
+      </p>
+    </footer>
+  </div>
+</section>
