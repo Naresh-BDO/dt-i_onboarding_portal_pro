@@ -18,14 +18,14 @@ namespace DT_I_Onboarding_Portal.Data
         public DbSet<AppUserRole> UserRoles { get; set; } = default!;
         public DbSet<NewJoiner> NewJoiners => Set<NewJoiner>();
 
-        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-        {
-            if (!optionsBuilder.IsConfigured)
-            {
-                var connectionString = "Server=JV1;Database=testcode;Trusted_Connection=True;TrustServerCertificate=True;";
-                optionsBuilder.UseSqlServer(connectionString);
-            }
-        }
+        //protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+        //{
+        //    if (!optionsBuilder.IsConfigured)
+        //    {
+        //        var connectionString = "Server=GN401;Database=Bdo;Trusted_Connection=True;TrustServerCertificate=True;";
+        //        optionsBuilder.UseSqlServer(connectionString);
+        //    }
+        //}
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
