@@ -450,3 +450,272 @@ These diagrams provide a comprehensive visual representation of:
 - Component relationships
 - Security layers
 - Deployment topology
+
+
+
++-----------------------------------------------------------+
+|                    ANGULAR FRONTEND                       |
+|                    http://localhost:4200                  |
++-----------------------------------------------------------+
+|                                                           |
+|  +-------------------+     +----------------------------+ |
+|  | Navigation (Nav)  | --> | AuthService (Core Logic)   | |
+|  | - Login / Signup  |     | - HTTP Requests            | |
+|  +-------------------+     +----------------------------+ |
+|            |                           |                  |
+|            v                           v                  |
+|  +-------------------+     +----------------------------+ |
+|  | Signup Component  |     | Login Component             | |
+|  | - Form            |     | - Form                     | |
+|  | - Validation      |     | - Token Storage            | |
+|  | - Role Dropdown   |     | - Redirect Logic           | |
+|  | - Error Display   |     | - User Info                | |
+|  +-------------------+     +----------------------------+ |
+|                \______________ Observables ______________/|
++-----------------------------------------------------------+
+                          |
+                          | HTTPS / TLS
+                          v
++-----------------------------------------------------------+
+|                     .NET 8 BACKEND                        |
+|                  https://localhost:7107                  |
++-----------------------------------------------------------+
+|                                                           |
+|  +-----------------------------------------------------+  |
+|  | AuthController                                      |  |
+|  |-----------------------------------------------------|  |
+|  | GET    /api/auth/roles                              |  |
+|  | POST   /api/auth/signup                             |  |
+|  | POST   /api/auth/login                              |  |
+|  | GET    /api/auth/whoami                             |  |
+|  | GET    /api/auth/profile/{id}                       |  |
+|  +-----------------------------------------------------+  |
+|                         |                                 |
+|                   Business Logic                          |
+|                         |                                 |
+|  +-----------------------------------------------------+  |
+|  | Services Layer                                      |  |
+|  | - TokenService (JWT)                                |  |
+|  | - PasswordHasher                                   |  |
+|  | - EfUserStore                                      |  |
+|  +-----------------------------------------------------+  |
+|                         |                                 |
+|                   ORM (EF Core 8)                         |
+|                         |                                 |
+|  +-----------------------------------------------------+  |
+|  | ApplicationDbContext                                |  |
+|  | Models: User, Role, UserRole, NewJoiner              |  |
+|  +-----------------------------------------------------+  |
+|                         |                                 |
+|                    SQL Server                            |
+|                         |                                 |
+|  +-----------------------------------------------------+  |
+|  | Database: Bdo                                       |  |
+|  | Tables: Users, Roles, UserRoles, NewJoiners          |  |
+|  +-----------------------------------------------------+  |
++-----------------------------------------------------------+
+
+
+
+START
+  |
+  v
+User navigates to /signup
+  |
+  v
+Angular loads SignupComponent
+  |
+  v
+ngOnInit()
+  |
+  v
+GET /api/auth/roles
+  |
+  v
+Roles loaded into dropdown
+  |
+  v
+User fills form:
+- Username
+- Email
+- Password
+- Confirm Password
+- Role
+  |
+  v
+Click "Create Account"
+  |
+  v
+Client-side validation
+  |-- Missing fields? ----------> Show error
+  |-- Password mismatch? -------> Show error
+  |-- Weak password? -----------> Show error
+  |-- Invalid email? -----------> Show error
+  |
+  v
+POST /api/auth/signup
+  |
+  v
+Backend validation
+  |-- Role invalid? ------------> 400
+  |-- Username exists? ---------> 400
+  |-- Email exists? ------------> 400
+  |
+  v
+Create User + UserRole
+  |
+  v
+Save to database
+  |
+  v
+201 Created
+  |
+  v
+Show success message
+  |
+  v
+Redirect to /login
+  |
+  v
+Login successful
+  |
+  v
+Role check
+  |-- Admin  ---> /new-joiner
+  |-- Others ---> /
+  |
+  v
+END
+
+
+
+app-routing.module.ts
+ |
+ +--> HomeComponent
+ |
+ +--> LoginComponent
+ |      |
+ |      +--> AuthService
+ |             |
+ |             +--> HttpClient
+ |
+ +--> SignupComponent
+ |      |
+ |      +--> AuthService
+ |      +--> Router
+ |      +--> CommonModule
+ |      +--> FormsModule
+ |
+ +--> NewJoinerComponent
+        |
+        +--> AuthGuard
+        +--> RoleGuard
+
+
+
+Users
++----------------------+
+| Id (PK)              |
+| Username (UNIQUE)    |
+| Email                |
+| PasswordHash         |
+| IsActive             |
++----------+-----------+
+           |
+           | 1..N
+           v
+UserRoles
++----------------------+
+| UserId (PK, FK)      |
+| RoleId (PK, FK)      |
++----------+-----------+
+           |
+           | N..1
+           v
+Roles
++----------------------+
+| Id (PK)              |
+| Name (UNIQUE)        |
+| Admin / User / Mgr   |
++----------------------+
+
+NewJoiners
++-----------------------------+
+| Id (PK)                     |
+| FullName                    |
+| Email (UNIQUE + StartDate)  |
+| Department                  |
+| ManagerName                 |
+| StartDate                   |
+| CreatedAtUtc                |
+| WelcomeEmailSentAtUtc       |
+| LastSendError               |
++-----------------------------+
+
+
+
+Frontend                         Backend
+----------------------------------------------------------
+GET /api/auth/roles  ----------> Query Roles
+<---------- 200 OK              Return RoleDto[]
+
+POST /api/auth/signup ---------> Validate input
+                                 Hash password
+                                 Create User
+                                 Create UserRole
+                                 Save DB
+<---------- 201 Created          SignupResponse
+
+POST /api/auth/login ----------> Verify credentials
+                                 Generate JWT
+<---------- 200 OK               Token + Roles
+
+Save token to localStorage
+Redirect based on role
+
+
+
+Submit Form
+   |
+Client Validation
+   |-- Failed ---> Show error
+   |
+Send Request
+   |-- Network error (0) ---> "Cannot reach server"
+   |-- 400 Bad Request ---> Show backend message
+   |-- 500 Error --------> "Server error"
+   |
+Success (201)
+   |
+Show success + Redirect
+
+
+
++--------------------------------------------------+
+|                 SECURITY LAYERS                  |
++--------------------------------------------------+
+| Transport Security                              |
+| - HTTPS / TLS                                   |
+| - Certificate validation                        |
++--------------------------------------------------+
+| Input Validation                                |
+| - Client-side                                  |
+| - Server-side                                  |
++--------------------------------------------------+
+| Authentication                                  |
+| - Password hashing                              |
+| - JWT issuance                                  |
++--------------------------------------------------+
+| Authorization                                   |
+| - Role-based access control                     |
+| - AuthGuard / RoleGuard                         |
++--------------------------------------------------+
+| Data Integrity                                  |
+| - Unique constraints                            |
+| - Foreign keys                                  |
+| - Transactions                                  |
++--------------------------------------------------+
+| XSS Protection                                  |
+| - Angular sanitization                          |
+| - CSP headers                                   |
++--------------------------------------------------+

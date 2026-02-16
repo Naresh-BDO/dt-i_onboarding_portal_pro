@@ -16,11 +16,14 @@ namespace DT_I_Onboarding_Portal.Server.Controllers
     {
         private readonly ApplicationDbContext _db;
         private readonly IEmailSender _email;
+        private readonly ILogger<NewJoinersController> _logger;
 
-        public NewJoinersController(ApplicationDbContext db, IEmailSender email)
+        public NewJoinersController(ApplicationDbContext db, IEmailSender email, ILogger<NewJoinersController> logger)
         {
             _db = db;
             _email = email;
+            _logger = logger;
+
         }
 
         /// <summary>Create a new joiner (Admin or User role)</summary>
@@ -86,6 +89,7 @@ namespace DT_I_Onboarding_Portal.Server.Controllers
                 error = sendResult.ErrorMessage,
                 providerMessage = sendResult.ProviderMessage
             });
+
         }
 
         /// <summary>Get a single new joiner by ID (Admin or User role)</summary>

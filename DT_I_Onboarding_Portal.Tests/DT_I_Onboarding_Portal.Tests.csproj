@@ -1,0 +1,28 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="FluentAssertions" Version="8.8.0" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.0.1" />
+    <PackageReference Include="Moq" Version="4.20.72" />
+    <PackageReference Include="xunit" Version="2.9.3" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="3.1.5">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\dt-i_onboarding_portal.client\dt-i_onboarding_portal.client.esproj" />
+    <ProjectReference Include="..\DT-I_Onboarding_Portal.Core\DT-I_Onboarding_Portal.Core.csproj" />
+    <ProjectReference Include="..\DT-I_Onboarding_Portal.Data\DT-I_Onboarding_Portal.Data.csproj" />
+    <ProjectReference Include="..\DT-I_Onboarding_Portal.Server\DT-I_Onboarding_Portal.Server.csproj" />
+    <ProjectReference Include="..\DT-I_Onboarding_Portal.Services\DT-I_Onboarding_Portal.Services.csproj" />
+  </ItemGroup>
+
+</Project>

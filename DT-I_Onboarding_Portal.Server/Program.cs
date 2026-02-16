@@ -1,14 +1,16 @@
 ﻿using System.Text;
-using DT_I_Onboarding_Portal.Data;
-using DT_I_Onboarding_Portal.Server.Middleware;
 using DT_I_Onboarding_Portal.Core.Models;
+using DT_I_Onboarding_Portal.Data;
+using DT_I_Onboarding_Portal.Data.Stores;
+using DT_I_Onboarding_Portal.Server.Middleware;
 using DT_I_Onboarding_Portal.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
-using DT_I_Onboarding_Portal.Data.Stores;
+using Serilog;
+using Serilog.Events;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -24,6 +26,22 @@ builder.Services.AddCors(options =>
             .AllowCredentials();
     });
 });
+
+builder.Host.UseSerilog((ctx, lc) =>
+{
+    lc.MinimumLevel.Information()
+      .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)
+      .MinimumLevel.Override("Microsoft.EntityFrameworkCore.Database.Command", LogEventLevel.Information)
+      .ReadFrom.Configuration(ctx.Configuration)
+      .WriteTo.MSSqlServer(
+          connectionString: ctx.Configuration.GetConnectionString("DefaultConnection"),
+          sinkOptions: new Serilog.Sinks.MSSqlServer.MSSqlServerSinkOptions
+          {
+              TableName = "AppLogs",
+              AutoCreateSqlTable = true
+          });
+});
+
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();

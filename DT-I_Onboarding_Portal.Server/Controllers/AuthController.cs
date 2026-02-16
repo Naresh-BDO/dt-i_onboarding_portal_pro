@@ -4,10 +4,12 @@ using DT_I_Onboarding_Portal.Core.Models.Dto;
 using DT_I_Onboarding_Portal.Data;
 using DT_I_Onboarding_Portal.Data.Stores;
 using DT_I_Onboarding_Portal.Services;
+using DT_I_Onboarding_Portal.Services.Utilities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 
 namespace DT_I_Onboarding_Portal.Server.Controllers
@@ -20,13 +22,23 @@ namespace DT_I_Onboarding_Portal.Server.Controllers
         private readonly TokenService _tokenService;
         private readonly ApplicationDbContext _db;
         private readonly IPasswordHasher<AppUser> _passwordHasher;
+        private readonly IOptions<SmtpOptions> _smtpOptions;
+        private readonly ILogger<AuthController> _logger;
 
-        public AuthController(EfUserStore userStore, TokenService tokenService, ApplicationDbContext db, IPasswordHasher<AppUser> passwordHasher)
+        public AuthController(
+            EfUserStore userStore,
+            TokenService tokenService,
+            ApplicationDbContext db,
+            IPasswordHasher<AppUser> passwordHasher,
+            IOptions<SmtpOptions> smtpOptions,
+            ILogger<AuthController> logger)
         {
             _userStore = userStore;
             _tokenService = tokenService;
             _db = db;
             _passwordHasher = passwordHasher;
+            _smtpOptions = smtpOptions;
+            _logger = logger;
         }
 
         [HttpPost("login")]
@@ -156,6 +168,60 @@ namespace DT_I_Onboarding_Portal.Server.Controllers
                 user.IsActive,
                 Roles = roles
             });
+        }
+
+        /// <summary>
+        /// Diagnostic endpoint to test SMTP connectivity
+        /// Development/Testing only - can be disabled in production
+        /// </summary>
+        [HttpGet("diagnostics/smtp")]
+        [AllowAnonymous]
+        public async Task<IActionResult> DiagnosticSmtp()
+        {
+            if (!HttpContext.Request.Host.Host.Equals("localhost", StringComparison.OrdinalIgnoreCase) &&
+                !HttpContext.Request.Host.Host.Equals("127.0.0.1", StringComparison.OrdinalIgnoreCase))
+            {
+                _logger.LogWarning("SMTP diagnostic endpoint accessed from non-localhost: {Host}", 
+                    HttpContext.Request.Host.Host);
+                return Forbid("SMTP diagnostics only available from localhost");
+            }
+
+            try
+            {
+                var diagnostics = new SmtpConnectionDiagnostics(
+                    _logger as ILogger<SmtpConnectionDiagnostics> ?? 
+                    LoggerFactory.Create(b => b.AddConsole()).CreateLogger<SmtpConnectionDiagnostics>());
+                
+                var suite = await diagnostics.RunFullDiagnosticsAsync(_smtpOptions.Value);
+
+                return Ok(new
+                {
+                    healthy = suite.IsHealthy,
+                    summary = suite.GetSummary(),
+                    details = new
+                    {
+                        tcp = new
+                        {
+                            connected = suite.TcpResult.TcpConnected,
+                            message = suite.TcpResult.Message
+                        },
+                        smtp = new
+                        {
+                            connected = suite.SmtpResult.SmtpConnected,
+                            message = suite.SmtpResult.Message
+                        }
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error running SMTP diagnostics");
+                return StatusCode(500, new
+                {
+                    error = "Diagnostic failed",
+                    message = ex.Message
+                });
+            }
         }
     }
 }
