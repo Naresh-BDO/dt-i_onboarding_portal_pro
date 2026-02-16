@@ -22,7 +22,7 @@ namespace DT_I_Onboarding_Portal.Data
         {
             if (!optionsBuilder.IsConfigured)
             {
-                var connectionString = "Server=GN401;Database=Bdo;Trusted_Connection=True;TrustServerCertificate=True;";
+                var connectionString = "Server=JV1;Database=testcode;Trusted_Connection=True;TrustServerCertificate=True;";
                 optionsBuilder.UseSqlServer(connectionString);
             }
         }
